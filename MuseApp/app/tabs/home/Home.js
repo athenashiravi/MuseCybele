@@ -1,19 +1,14 @@
+// HomeScreen.js
 import React from "react";
 import {
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
-  ImageBackground,
   FlatList,
   Dimensions,
 } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
-import Gallery from "./Gallery";
 import Ionicons from "react-native-vector-icons/Ionicons";
-
-const Stack = createStackNavigator();
 
 const DATA = [
   { id: "1", prompt: "What are you grateful for?", detail: "Persian" },
@@ -26,7 +21,7 @@ const DATA = [
   },
 ];
 
-function HomeScreen({ navigation }) {
+function Home({ navigation }) {
   const renderCard = ({ item }) => {
     return (
       <View style={styles.card}>
@@ -91,73 +86,10 @@ function HomeScreen({ navigation }) {
   );
 }
 
-function InitialScreen({ navigation }) {
-  return (
-    <ImageBackground
-      source={require("./assets/blob.png")}
-      style={styles.background}
-    >
-      <View style={styles.initialContainer}>
-        <Text style={styles.title}>MUSE</Text>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate("Home")}
-        >
-          <Text style={styles.buttonText}>Get Drawing</Text>
-        </TouchableOpacity>
-      </View>
-    </ImageBackground>
-  );
-}
-
-export default function App() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Initial">
-        <Stack.Screen
-          name="Initial"
-          component={InitialScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Gallery" component={Gallery} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-  },
-  background: {
-    flex: 1,
-    backgroundColor: "black",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  initialContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 60,
-    color: "#fff",
-    fontWeight: "bold",
-    marginBottom: 100,
-  },
-  button: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-  },
-  buttonText: {
-    fontSize: 18,
-    color: "#fff",
-    fontWeight: "600",
   },
   header: {
     fontSize: 24,
@@ -232,4 +164,4 @@ const styles = StyleSheet.create({
   },
 });
 
-
+export default Home;
