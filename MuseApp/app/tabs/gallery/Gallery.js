@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,9 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
-  Alert,
-  Modal,
-  TextInput,
+  Button,
 } from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import Svg, { Path } from "react-native-svg";
 
 const DATA = [
   { id: "1", prompt: "What are you grateful for?", detail: "Persian" },
@@ -27,155 +25,120 @@ const DATA = [
   { id: "8", prompt: "What gives you energy?", detail: "Newborn" },
 ];
 
-export default function Gallery() {
-  const [selectedTab, setSelectedTab] = useState("Live Murals");
-  const [likedCards, setLikedCards] = useState({});
-  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
+const Gallery = () => {
+  const [isCanvasVisible, setIsCanvasVisible] = useState(false);
+  const [paths, setPaths] = useState([]);
+  const [strokeColor, setStrokeColor] = useState("black");
+  const currentPath = useRef("");
 
-  const toggleLike = (id) => {
-    setLikedCards((prev) => ({
-      ...prev,
-      [id]: !prev[id], // Toggle the liked state for the card with this id
-    }));
+  const handleTouchStart = (event) => {
+    const { locationX, locationY } = event.nativeEvent;
+    currentPath.current = `M${locationX},${locationY}`;
   };
 
-  const openShareAlert = () => {
-    Alert.alert("Share Link?", "Invite a friend to join this mural!", [
-      { text: "Oops! Nevermind", style: "cancel" },
-      { text: "Share", onPress: () => setIsShareModalVisible(true) },
+  const handleTouchMove = (event) => {
+    const { locationX, locationY } = event.nativeEvent;
+    currentPath.current += ` L${locationX},${locationY}`;
+    setPaths((prevPaths) => [
+      ...prevPaths.slice(0, -1),
+      { path: currentPath.current, color: strokeColor },
     ]);
   };
 
-  const closeShareModal = () => {
-    setIsShareModalVisible(false);
+  const handleTouchEnd = () => {
+    setPaths((prevPaths) => [
+      ...prevPaths,
+      { path: currentPath.current, color: strokeColor },
+    ]);
+    currentPath.current = "";
   };
 
-  const renderCard = ({ item }) => {
-    const isLiked = likedCards[item.id] || false; // Check if the card is liked
-    return (
-      <View style={styles.card}>
-        <Text style={styles.cardText}>{item.prompt}</Text>
-        <Text style={styles.cardDetail}>{item.detail}</Text>
-
-        {/* Share Icon */}
-        <TouchableOpacity style={styles.shareButton} onPress={openShareAlert}>
-          <Ionicons name="share-outline" size={20} color="#000" />
-        </TouchableOpacity>
-
-        {/* Heart Icon */}
-        <TouchableOpacity
-          style={styles.likeButton}
-          onPress={() => toggleLike(item.id)}
-        >
-          <Ionicons
-            name="heart"
-            size={20}
-            color={isLiked ? "lightpink" : "gray"} // Change color based on liked state
-          />
-        </TouchableOpacity>
-      </View>
-    );
+  const clearCanvas = () => {
+    setPaths([]);
   };
+
+  const renderCard = ({ item }) => (
+    <View style={styles.card}>
+      <Text style={styles.cardText}>{item.prompt}</Text>
+      <Text style={styles.cardDetail}>{item.detail}</Text>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>MUSE</Text>
-      </View>
-
-      {/* Tabs */}
-      <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[
-            styles.tab,
-            selectedTab === "Live Murals" && styles.activeTab,
-          ]}
-          onPress={() => setSelectedTab("Live Murals")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              selectedTab === "Live Murals" && styles.activeTabText,
-            ]}
+      {isCanvasVisible ? (
+        <View style={styles.canvasContainer}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => setIsCanvasVisible(false)}
           >
-            Live Murals
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === "Archive" && styles.activeTab]}
-          onPress={() => setSelectedTab("Archive")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              selectedTab === "Archive" && styles.activeTabText,
-            ]}
+            <Text style={styles.backButtonText}>Back to Gallery</Text>
+          </TouchableOpacity>
+          <View
+            style={styles.canvas}
+            onStartShouldSetResponder={() => true}
+            onMoveShouldSetResponder={() => true}
+            onResponderStart={handleTouchStart}
+            onResponderMove={handleTouchMove}
+            onResponderEnd={handleTouchEnd}
           >
-            Archive
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Grid */}
-      <FlatList
-        data={DATA}
-        renderItem={renderCard}
-        keyExtractor={(item) => item.id}
-        numColumns={2} // Display items in two columns
-        contentContainerStyle={styles.grid}
-      />
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <TouchableOpacity>
-          <Ionicons name="home-outline" size={24} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Ionicons name="add-circle-outline" size={24} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Ionicons name="images-outline" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Share Modal */}
-      <Modal
-        visible={isShareModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={closeShareModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+            <Svg style={styles.svgCanvas}>
+              {paths.map((item, index) => (
+                <Path
+                  key={index}
+                  d={item.path}
+                  stroke={item.color}
+                  strokeWidth={3}
+                  fill="none"
+                />
+              ))}
+            </Svg>
+          </View>
+          <View style={styles.colorPalette}>
             <TouchableOpacity
-              style={styles.closeButton}
-              onPress={closeShareModal}
-            >
-              <Ionicons name="close-outline" size={24} color="#000" />
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Share Modal</Text>
-            <Text style={styles.modalSubtitle}>Share this link via</Text>
-            <View style={styles.modalIcons}>
-              <Ionicons name="logo-facebook" size={30} color="#4267B2" />
-              <Ionicons name="logo-twitter" size={30} color="#1DA1F2" />
-              <Ionicons name="logo-instagram" size={30} color="#C13584" />
-              <Ionicons name="logo-whatsapp" size={30} color="#25D366" />
-              <Ionicons name="send-outline" size={30} color="#007AFF" />
-            </View>
-            <Text style={styles.modalSubtitle}>Or copy link</Text>
-            <View style={styles.linkContainer}>
-              <Text style={styles.linkText}>example.com/share-link</Text>
-              <TouchableOpacity style={styles.copyButton}>
-                <Text style={styles.copyButtonText}>Copy</Text>
-              </TouchableOpacity>
-            </View>
+              style={[styles.colorOption, { backgroundColor: "black" }]}
+              onPress={() => setStrokeColor("black")}
+            />
+            <TouchableOpacity
+              style={[styles.colorOption, { backgroundColor: "red" }]}
+              onPress={() => setStrokeColor("red")}
+            />
+            <TouchableOpacity
+              style={[styles.colorOption, { backgroundColor: "blue" }]}
+              onPress={() => setStrokeColor("blue")}
+            />
+            <TouchableOpacity
+              style={[styles.colorOption, { backgroundColor: "green" }]}
+              onPress={() => setStrokeColor("green")}
+            />
+          </View>
+          <View style={styles.buttons}>
+            <Button title="Clear" onPress={clearCanvas} />
           </View>
         </View>
-      </Modal>
+      ) : (
+        <>
+          <View style={styles.header}>
+            <Text style={styles.title}>MUSE</Text>
+          </View>
+          <FlatList
+            data={DATA}
+            renderItem={renderCard}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            contentContainerStyle={styles.grid}
+          />
+          <TouchableOpacity
+            style={styles.navigateButton}
+            onPress={() => setIsCanvasVisible(true)}
+          >
+            <Text style={styles.navigateButtonText}>Open Canvas</Text>
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -192,28 +155,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
   },
-  tabs: {
-    flexDirection: "row",
-    justifyContent: "center",
-    paddingVertical: 10,
-    backgroundColor: "#fff",
-  },
-  tab: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#000",
-  },
-  tabText: {
-    fontSize: 16,
-    color: "gray",
-  },
-  activeTabText: {
-    color: "#000",
-    fontWeight: "bold",
-  },
   grid: {
     paddingHorizontal: 20,
     paddingTop: 5,
@@ -227,7 +168,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
-    position: "relative",
   },
   cardText: {
     fontSize: 16,
@@ -240,79 +180,63 @@ const styles = StyleSheet.create({
     color: "gray",
     textAlign: "center",
   },
-  shareButton: {
-    position: "absolute",
-    bottom: 10,
-    left: 10,
-  },
-  likeButton: {
-    position: "absolute",
-    bottom: 10,
-    right: 10,
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-    padding: 20,
-    backgroundColor: "#000",
-  },
-  modalOverlay: {
+  canvasContainer: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-  },
-  modalContent: {
-    width: "90%",
     backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 20,
-    alignItems: "center",
   },
-  closeButton: {
-    alignSelf: "flex-end",
+  canvas: {
+    width: Dimensions.get("window").width - 20,
+    height: 400,
+    backgroundColor: "#fff",
+    borderColor: "#000",
+    borderWidth: 1,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
+  svgCanvas: {
+    flex: 1,
   },
-  modalSubtitle: {
-    fontSize: 16,
-    color: "gray",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  modalIcons: {
+  colorPalette: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    width: "80%",
-    marginBottom: 20,
-  },
-  linkContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    backgroundColor: "#F2F2F2",
-    borderRadius: 10,
+    justifyContent: "space-around",
     marginTop: 10,
   },
-  linkText: {
-    color: "#000",
-    flex: 1,
-    marginRight: 10,
+  colorOption: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#000",
   },
-  copyButton: {
+  buttons: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginTop: 20,
+  },
+  backButton: {
+    position: "absolute",
+    top: 50,
+    left: 20,
     backgroundColor: "#6200EE",
+    padding: 10,
     borderRadius: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
   },
-  copyButtonText: {
+  backButtonText: {
     color: "#fff",
     fontWeight: "bold",
   },
+  navigateButton: {
+    backgroundColor: "#6200EE",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    margin: 20,
+  },
+  navigateButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });
+
+export default Gallery;
