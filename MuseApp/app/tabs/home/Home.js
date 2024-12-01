@@ -1,166 +1,80 @@
-// HomeScreen.js
 import React from "react";
 import {
-  StyleSheet,
-  Text,
   View,
-  TouchableOpacity,
-  FlatList,
+  Text,
+  ScrollView,
+  StyleSheet,
+  ImageBackground,
+  Image,
   Dimensions,
 } from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import RecentMural from "../../components/RecentMural";
+//import IdentityFeed from "./IdentityFeed";
+const windowWidth = Dimensions.get("window").width;
+const windowHeight = Dimensions.get("window").height;
 
-const DATA = [
-  { id: "1", prompt: "What are you grateful for?", detail: "Persian" },
-  { id: "2", prompt: "What are you craving right now?", detail: "Baking" },
-  { id: "3", prompt: "What are your current goals?", detail: "Newborn" },
-  {
-    id: "4",
-    prompt: "What does support look like today?",
-    detail: "Empty-Nester",
-  },
-];
-
-function Home({ navigation }) {
-  const renderCard = ({ item }) => {
-    return (
-      <View style={styles.card}>
-        <Text style={styles.cardText}>{item.prompt}</Text>
-        <Text style={styles.cardDetail}>{item.detail}</Text>
-      </View>
-    );
-  };
-
+const Home = () => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Be your own muse...</Text>
-
-      <View style={styles.identitiesSection}>
-        <Text style={styles.subHeader}>Identities</Text>
-        <Text style={styles.subtitle}>I am a ___ mom...</Text>
-        <View style={styles.tagContainer}>
-          <TouchableOpacity style={styles.tag}>
-            <Text style={styles.tagText}>Persian</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.tag}>
-            <Text style={styles.tagText}>Empty-Nester</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.tag}>
-            <Text style={styles.tagText}>Single</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.tag}>
-            <Text style={styles.tagText}>Military</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.tag}>
-            <Text style={styles.tagText}>Newborn</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.tag}>
-            <Text style={styles.tagText}>Yoga</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={styles.mindSection}>
-        <Text style={styles.subHeader}>The last things on your mind...</Text>
-        <FlatList
-          data={DATA}
-          renderItem={renderCard}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          contentContainerStyle={styles.cardContainer}
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Image
+          source={require("../../../assets/images/corner-watercolor.png")} // Using the images from assets
+          style={styles.image} // Apply image style
+          resizeMode="cover" // Adjust how the image fills the container
         />
+        <Text style={styles.heading}> Welcome Esha</Text>
       </View>
-
-      <View style={styles.footer}>
-        <TouchableOpacity>
-          <Ionicons name="home-outline" size={24} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <Ionicons name="add-circle-outline" size={24} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate("Gallery")}>
-          <Ionicons name="images-outline" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
-    </View>
+      <RecentMural />
+    </ScrollView>
   );
-}
+};
+//      <IdentityFeed />
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 35,
     backgroundColor: "#fff",
   },
+  image: {
+    flex: 1, // Take up full height of the header
+    aspectRatio: 1, // Adjust according to the image's aspect ratio
+    height: "140%", // Set the height as needed
+    width: "70%",
+    position: "absolute",
+    top: "-50%",
+    left: "-5%",
+  },
   header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginVertical: 20,
+    width: windowWidth, // Full width or specify a fixed width
+    height: windowWidth * 0.3, // Increase height to make the view bigger
+    position: "relative", // Keep the position relative for absolute children
+    justifyContent: "center", // Center content vertically (optional)
+    marginBottom: windowWidth * 0.1,
   },
-  identitiesSection: {
+  heading: {
+    marginTop: -20,
+    fontSize: 45,
+    fontFamily: "Emilys Candy",
+  },
+  recentlyOnMind: {
     marginBottom: 20,
-  },
-  subHeader: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 5,
   },
   subtitle: {
-    fontSize: 14,
-    color: "gray",
-    marginBottom: 10,
-  },
-  tagContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-  },
-  tag: {
-    backgroundColor: "#000",
-    borderRadius: 15,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    margin: 5,
-  },
-  tagText: {
-    color: "#fff",
-    fontSize: 14,
-  },
-  mindSection: {
-    marginBottom: 20,
-  },
-  cardContainer: {
-    alignItems: "center",
-    justifyContent: "space-evenly",
+    fontSize: 18,
+    fontWeight: "bold",
   },
   card: {
-    width: Dimensions.get("window").width / 2 - 25,
-    backgroundColor: "#E5E5E5",
-    borderRadius: 10,
+    backgroundColor: "#f5f5f5",
     padding: 15,
-    margin: 10,
-    alignItems: "center",
-    justifyContent: "center",
+    borderRadius: 10,
   },
   cardText: {
     fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
   },
-  cardDetail: {
+  communityText: {
     fontSize: 14,
-    color: "gray",
-    textAlign: "center",
-  },
-  footer: {
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-    alignItems: "center",
-    paddingVertical: 15,
-    backgroundColor: "#000",
+    color: "#999",
   },
 });
 
