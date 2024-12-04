@@ -1,14 +1,15 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-
+import Theme from "../../../assets/theme";
 const PromptScreen = ({ route, navigation }) => {
   const { identity, inputs } = route.params || {}; // Get the passed parameters, if available
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Today's Prompt:</Text>
-      <Text style={styles.prompt}>What was the hardest part of my day?</Text>
-
+      <View style={styles.heading}>
+        <Text style={styles.title}>Today's Prompt:</Text>
+        <Text style={styles.prompt}>What was the hardest part of my day?</Text>
+      </View>
       <Text style={styles.subtitle}>Happy with your prompt?</Text>
 
       <TouchableOpacity
@@ -48,24 +49,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    padding: 20,
-    alignItems: "center",
+    padding: 35,
+    paddingTop: 40,
+  },
+  heading: {
+    paddingBottom: 150,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#7B4B94",
+    fontSize: 40,
+    color: Theme.colors.textPrimary,
     marginBottom: 10,
+    fontFamily: "Emilys Candy",
+    paddingBottom: 80,
   },
   prompt: {
-    fontSize: 18,
-    color: "#000",
-    textAlign: "center",
+    fontSize: 40,
+    color: Theme.colors.textSecondary,
     marginVertical: 20,
+    textAlign: "center",
+    fontFamily: "Emilys Candy",
   },
   subtitle: {
-    fontSize: 16,
-    color: "#7B4B94",
+    fontSize: 35,
+    color: Theme.colors.textGray,
+    fontFamily: "Manrope",
     marginBottom: 20,
   },
   button: {
@@ -85,5 +92,3 @@ const styles = StyleSheet.create({
 });
 
 export default PromptScreen;
-
-

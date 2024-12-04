@@ -6,7 +6,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import SplashScreen from "./components/SplashScreen";
 import Home from "./tabs/home/Home";
 import Gallery from "./tabs/gallery/Gallery";
-import Mural from "./tabs/newMural/mural";
+import Mural from "./tabs/newMural/Mural";
 import ExpressScreen from "./tabs/newMural/ExpressScreen";
 import DrawingScreen from "./tabs/newMural/DrawingScreen";
 import PromptScreen from "./tabs/newMural/PromptScreen";
@@ -39,7 +39,6 @@ const headerStyle = {
   shadowOpacity: 0.4,
   shadowRadius: 3,
   elevation: 5,
-  paddingTop: 0,
 };
 
 const headerTitleStyle = {
@@ -142,7 +141,7 @@ function MyTabs() {
         name="Gallery"
         component={Gallery}
         options={{
-          headerTitle: "MUSE",
+          headerTitle: "Live Murals",
           ...screenOptions,
           tabBarLabel: () => null,
           tabBarIcon: ({ size, focused }) => (

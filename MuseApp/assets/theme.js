@@ -5,6 +5,7 @@ export default {
 
     textPrimary: "#000000",
     textSecondary: "#AC0AB1",
+    textGray: "#979797",
 
     iconPrimary: "#D582D7",
     iconSecondary: "#AC0AB1",
@@ -15,6 +16,8 @@ export default {
 
     muralBackground: "#FFFFFF",
     shadowColor: "#f8f2fc",
+
+    buttonBackground: "#D582D7",
   },
   sizes: {
     iconSmall: 16,

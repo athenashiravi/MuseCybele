@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   header: {
-    paddingTop: 30,
+    paddingTop: 35,
     paddingVertical: 5,
     alignItems: "center",
   },
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   },
   cardDetail: {
     fontSize: 25,
-    color: "gray",
+    color: Theme.colors.textGray,
     textAlign: "center",
     fontFamily: "Manrope",
   },
