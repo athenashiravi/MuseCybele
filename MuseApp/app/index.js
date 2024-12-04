@@ -6,13 +6,30 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import SplashScreen from "./components/SplashScreen";
 import Home from "./tabs/home/Home";
 import Gallery from "./tabs/gallery/Gallery";
+import Mural from "./tabs/newMural/mural"; // Import the Mural screen
+import ExpressScreen from "./tabs/newMural/ExpressScreen"; // Import the ExpressScreen
+import DrawingScreen from "./tabs/newMural/DrawingScreen"; // Import the ExpressScreen
+
+import PromptScreen from "./tabs/newMural/PromptScreen";
 import * as Font from "expo-font";
 import { Text, View, StyleSheet, ActivityIndicator } from "react-native";
 import Theme from "../assets/theme";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import Header from "./components/Header"; // Import the custom Header component
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-import Header from "./components/Header"; // Import the custom Header component
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+
+function PlusStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Mural" component={Mural} />
+      <Stack.Screen name="ExpressScreen" component={ExpressScreen} />
+      <Stack.Screen name="PromptScreen" component={PromptScreen} /> 
+      <Stack.Screen name="DrawingScreen" component={DrawingScreen} />
+    </Stack.Navigator>
+  );
+}
 
 function MyTabs() {
   return (
@@ -35,6 +52,22 @@ function MyTabs() {
           tabBarIcon: ({ size, focused }) => (
             <MaterialCommunityIcons
               name="home"
+              size={size}
+              color={
+                focused ? Theme.colors.iconSecondary : Theme.colors.iconPrimary
+              }
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Plus"
+        component={PlusStack}
+        options={{
+          tabBarLabel: () => null,
+          tabBarIcon: ({ size, focused }) => (
+            <MaterialCommunityIcons
+              name="plus-circle"
               size={size}
               color={
                 focused ? Theme.colors.iconSecondary : Theme.colors.iconPrimary
@@ -122,3 +155,5 @@ const styles = StyleSheet.create({
 });
 
 export default App;
+
+

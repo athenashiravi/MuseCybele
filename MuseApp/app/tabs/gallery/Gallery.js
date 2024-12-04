@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,85 +6,42 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
-  Button,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { supabase } from "../../../supabaseClient"; // Adjust based on your project structure
-
-const DATA = [
-  { id: "1", prompt: "What are you grateful for?", detail: "Persian" },
-  { id: "2", prompt: "What are you craving right now?", detail: "Baking" },
-  { id: "3", prompt: "What are your current goals?", detail: "Newborn" },
-  { id: "4", prompt: "What does support look like today?", detail: "Empty-Nester" },
-  { id: "5", prompt: "What makes you happy today?", detail: "Single" },
-  { id: "6", prompt: "Who inspires you the most?", detail: "Working" },
-  { id: "7", prompt: "What do you need to let go of?", detail: "Single" },
-  { id: "8", prompt: "What gives you energy?", detail: "Newborn" },
-];
+import { supabase } from "../../../supabaseClient";
 
 const Gallery = () => {
+  const [murals, setMurals] = useState([]); // Store murals fetched from Supabase
   const [isCanvasVisible, setIsCanvasVisible] = useState(false);
-  const [selectedCard, setSelectedCard] = useState(null); // Track the selected card
-  const [cardPaths, setCardPaths] = useState({}); // Map cardId to its paths
-  const [strokeColor, setStrokeColor] = useState("black");
-  const currentPath = useRef("");
+  const [selectedMural, setSelectedMural] = useState(null);
 
-  const handleTouchStart = (event) => {
-    const { locationX, locationY } = event.nativeEvent;
-    currentPath.current = `M${locationX},${locationY}`;
-  };
+  // Fetch murals from Supabase
+  useEffect(() => {
+    const fetchMurals = async () => {
+      try {
+        const { data, error } = await supabase.from("canvases").select("*");
+        console.log(data);
+        if (error) throw error;
 
-  const handleTouchMove = (event) => {
-    const { locationX, locationY } = event.nativeEvent;
-    currentPath.current += ` L${locationX},${locationY}`;
-    setCardPaths((prev) => ({
-      ...prev,
-      [selectedCard.id]: [
-        ...(prev[selectedCard.id] || []).slice(0, -1),
-        { path: currentPath.current, color: strokeColor },
-      ],
-    }));
-  };
+        // Combine hardcoded data with dynamically added data
+        const combinedData = data.sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        );
+        setMurals(combinedData);
+      } catch (error) {
+        console.error("Error fetching murals:", error.message);
+      }
+    };
 
-  const handleTouchEnd = () => {
-    setCardPaths((prev) => ({
-      ...prev,
-      [selectedCard.id]: [
-        ...(prev[selectedCard.id] || []),
-        { path: currentPath.current, color: strokeColor },
-      ],
-    }));
-    currentPath.current = "";
-  };
+    fetchMurals();
+  }, []);
 
-  const clearCanvas = () => {
-    setCardPaths((prev) => ({ ...prev, [selectedCard.id]: [] }));
-  };
-
-  const saveCanvas = async () => {
-    try {
-      const pathsToSave = cardPaths[selectedCard.id] || [];
-      const { error } = await supabase.from("canvases").insert([
-        {
-          cardId: selectedCard.id,
-          paths: pathsToSave, // Save only the paths for the selected card
-          prompt: selectedCard.prompt,
-          detail: selectedCard.detail,
-        },
-      ]);
-      if (error) throw error;
-      alert("Canvas saved successfully!");
-    } catch (error) {
-      console.error("Error saving canvas:", error.message);
-      alert("Failed to save canvas. Please try again.");
-    }
-  };
-
-  const renderCard = ({ item }) => (
+  // Render a single mural card
+  const renderMural = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
       onPress={() => {
-        setSelectedCard(item);
+        setSelectedMural(item);
         setIsCanvasVisible(true);
       }}
     >
@@ -93,72 +50,51 @@ const Gallery = () => {
     </TouchableOpacity>
   );
 
-  return (
-    <View style={styles.container}>
-      {isCanvasVisible ? (
-        <View style={styles.canvasContainer}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => {
-              setIsCanvasVisible(false);
-            }}
-          >
-            <Text style={styles.backButtonText}>Back to Gallery</Text>
-          </TouchableOpacity>
-          <Text style={styles.promptText}>{selectedCard.prompt}</Text>
-          <View
-            style={styles.canvas}
-            onStartShouldSetResponder={() => true}
-            onMoveShouldSetResponder={() => true}
-            onResponderStart={handleTouchStart}
-            onResponderMove={handleTouchMove}
-            onResponderEnd={handleTouchEnd}
-          >
-            <Svg style={styles.svgCanvas}>
-              {(cardPaths[selectedCard.id] || []).map((item, index) => (
+  // Render the canvas for a selected mural
+  const renderCanvas = () => {
+    if (!selectedMural) return null;
+
+    return (
+      <View style={styles.canvasContainer}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => setIsCanvasVisible(false)}
+        >
+          <Text style={styles.backButtonText}>Back to Gallery</Text>
+        </TouchableOpacity>
+        <Text style={styles.promptText}>{selectedMural.prompt}</Text>
+        <View style={styles.canvas}>
+          <Svg style={styles.svgCanvas}>
+            {selectedMural.paths &&
+              selectedMural.paths.map((pathObj, index) => (
                 <Path
                   key={index}
-                  d={item.path}
-                  stroke={item.color}
+                  d={pathObj.path}
+                  stroke={pathObj.color}
                   strokeWidth={3}
                   fill="none"
                 />
               ))}
-            </Svg>
-          </View>
-          <View style={styles.colorPalette}>
-            <TouchableOpacity
-              style={[styles.colorOption, { backgroundColor: "black" }]}
-              onPress={() => setStrokeColor("black")}
-            />
-            <TouchableOpacity
-              style={[styles.colorOption, { backgroundColor: "red" }]}
-              onPress={() => setStrokeColor("red")}
-            />
-            <TouchableOpacity
-              style={[styles.colorOption, { backgroundColor: "blue" }]}
-              onPress={() => setStrokeColor("blue")}
-            />
-            <TouchableOpacity
-              style={[styles.colorOption, { backgroundColor: "green" }]}
-              onPress={() => setStrokeColor("green")}
-            />
-          </View>
-          <View style={styles.buttons}>
-            <Button title="Clear" onPress={clearCanvas} />
-            <Button title="Save" onPress={saveCanvas} />
-          </View>
+          </Svg>
         </View>
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {isCanvasVisible ? (
+        renderCanvas()
       ) : (
         <>
           <View style={styles.header}>
             <Text style={styles.title}>MUSE</Text>
           </View>
           <FlatList
-            data={DATA}
-            renderItem={renderCard}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
+            data={murals}
+            renderItem={renderMural}
+            keyExtractor={(item) => item.id.toString()} // Use unique IDs from Supabase
+            numColumns={2} // Display in two columns
             contentContainerStyle={styles.grid}
           />
         </>
@@ -219,26 +155,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderColor: "#000",
     borderWidth: 1,
+    marginVertical: 20,
   },
   svgCanvas: {
     flex: 1,
-  },
-  colorPalette: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 10,
-  },
-  colorOption: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: "#000",
-  },
-  buttons: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 20,
   },
   backButton: {
     position: "absolute",
@@ -260,6 +180,4 @@ const styles = StyleSheet.create({
 });
 
 export default Gallery;
-
-
 
