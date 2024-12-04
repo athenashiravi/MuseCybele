@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, ImageBackground } from "react-native";
 const RecentMural = () => {
   return (
     <ImageBackground
-      source={require("../../assets/images/mural-popout.png")} // Replace with your actual image path
+      source={require("../../assets/images/mural-recent.png")} // Replace with your actual image path
       style={styles.background}
     >
       <View style={styles.recentlyOnMind}>

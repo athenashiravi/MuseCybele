@@ -12,6 +12,9 @@ export default {
     tabBarActive: "#AC0AB1",
     tabBarBorder: "#AC0AB1",
     tabBarInactive: "#D582D7",
+
+    shadowColor: "#9E9E9E",
+    shadowRadius: 4,
   },
   sizes: {
     iconSmall: 16,

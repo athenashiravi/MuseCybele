@@ -8,6 +8,7 @@ import {
   Image,
   Dimensions,
 } from "react-native";
+import MuralPopout from "../../components/MuralPopout";
 import RecentMural from "../../components/RecentMural";
 //import IdentityFeed from "./IdentityFeed";
 const windowWidth = Dimensions.get("window").width;
@@ -24,7 +25,7 @@ const Home = () => {
         />
         <Text style={styles.heading}> Welcome Esha</Text>
       </View>
-      <RecentMural />
+      <MuralPopout />
     </ScrollView>
   );
 };
