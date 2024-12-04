@@ -6,9 +6,11 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
+  ImageBackground,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../../supabaseClient";
+import Theme from "../../../assets/theme";
 
 const Gallery = () => {
   const [murals, setMurals] = useState([]); // Store murals fetched from Supabase
@@ -45,8 +47,15 @@ const Gallery = () => {
         setIsCanvasVisible(true);
       }}
     >
-      <Text style={styles.cardText}>{item.prompt}</Text>
-      <Text style={styles.cardDetail}>{item.detail}</Text>
+      <ImageBackground
+        source={require("../../../assets/images/liveMural.png")} // Assuming item.image contains the image URL
+        style={styles.imageBackground}
+      >
+        <View style={styles.textContainer}>
+          <Text style={styles.cardText}>{item.prompt}</Text>
+          <Text style={styles.cardDetail}>{item.detail}</Text>
+        </View>
+      </ImageBackground>
     </TouchableOpacity>
   );
 
@@ -88,7 +97,7 @@ const Gallery = () => {
       ) : (
         <>
           <View style={styles.header}>
-            <Text style={styles.title}>MUSE</Text>
+            <Text style={styles.title}>Live Murals</Text>
           </View>
           <FlatList
             data={murals}
@@ -109,39 +118,63 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   header: {
-    backgroundColor: "#6200EE",
-    paddingVertical: 20,
+    paddingTop: 30,
+    paddingVertical: 5,
     alignItems: "center",
   },
   title: {
-    fontSize: 24,
+    fontSize: 40,
     fontWeight: "bold",
-    color: "#fff",
+    fontFamily: "Emilys Candy",
+    color: Theme.colors.textPrimary,
   },
   grid: {
     paddingHorizontal: 20,
     paddingTop: 5,
   },
+  textContainer: {
+    alignItems: "center", // Align text center horizontally
+    padding: 10,
+    borderRadius: 10,
+    width: Dimensions.get("window").width / 2 - 80,
+  },
+  imageBackground: {
+    flex: 1,
+    resizeMode: "cover",
+    width: Dimensions.get("window").width / 2 - 40,
+    height: Dimensions.get("window").width / 2 - 50,
+    marginTop: -15,
+    justifyContent: "center", // Center vertically
+    alignItems: "center", // Center horizontally
+  },
   card: {
     width: Dimensions.get("window").width / 2 - 40,
     height: Dimensions.get("window").width / 2 - 40,
     margin: 10,
-    backgroundColor: "#E5E5E5",
+    backgroundColor: Theme.colors.muralBackground,
     borderRadius: 10,
+    overflow: "hidden", // This ensures children are clipped to the border radius
+    shadowColor: Theme.colors.shadowColor,
+    shadowOffset: { width: 2, height: 4 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 5,
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
   },
   cardText: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 35,
     textAlign: "center",
     marginBottom: 10,
+    fontWeight: "bold",
+    fontFamily: "Manrope",
   },
   cardDetail: {
-    fontSize: 14,
+    fontSize: 25,
     color: "gray",
     textAlign: "center",
+    fontFamily: "Manrope",
   },
   canvasContainer: {
     flex: 1,
@@ -164,12 +197,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 50,
     left: 20,
-    backgroundColor: "#6200EE",
+    backgroundColor: Theme.colors.backgroundSecondary,
     padding: 10,
     borderRadius: 5,
   },
   backButtonText: {
-    color: "#fff",
+    color: Theme.colors.backgroundPrimary,
     fontWeight: "bold",
   },
   promptText: {
@@ -180,4 +213,3 @@ const styles = StyleSheet.create({
 });
 
 export default Gallery;
-

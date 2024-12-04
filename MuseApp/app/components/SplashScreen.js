@@ -6,24 +6,27 @@ import {
   View,
   TouchableOpacity,
   ImageBackground,
+  SafeAreaView,
 } from "react-native";
 
 function SplashScreen({ navigation }) {
   return (
-    <ImageBackground
-      source={require("../../assets/images/blob.png")}
-      style={styles.background}
-    >
-      <View style={styles.container}>
-        <Text style={styles.title}>MUSE</Text>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.replace("Main")}
-        >
-          <Text style={styles.buttonText}>Get Drawing</Text>
-        </TouchableOpacity>
-      </View>
-    </ImageBackground>
+    <SafeAreaView style={styles.safeArea}>
+      <ImageBackground
+        source={require("../../assets/images/blob.png")}
+        style={styles.background}
+      >
+        <View style={styles.container}>
+          <Text style={styles.title}>MUSE</Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.replace("Main")}
+          >
+            <Text style={styles.buttonText}>Get Drawing</Text>
+          </TouchableOpacity>
+        </View>
+      </ImageBackground>
+    </SafeAreaView>
   );
 }
 
@@ -55,6 +58,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#fff",
     fontWeight: "600",
+  },
+  safeArea: {
+    flex: 1,
   },
 });
 

@@ -12,6 +12,9 @@ export default {
     tabBarActive: "#AC0AB1",
     tabBarBorder: "#AC0AB1",
     tabBarInactive: "#D582D7",
+
+    muralBackground: "#FFFFFF",
+    shadowColor: "#f8f2fc",
   },
   sizes: {
     iconSmall: 16,

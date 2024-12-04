@@ -6,27 +6,88 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import SplashScreen from "./components/SplashScreen";
 import Home from "./tabs/home/Home";
 import Gallery from "./tabs/gallery/Gallery";
-import Mural from "./tabs/newMural/mural"; // Import the Mural screen
-import ExpressScreen from "./tabs/newMural/ExpressScreen"; // Import the ExpressScreen
-import DrawingScreen from "./tabs/newMural/DrawingScreen"; // Import the ExpressScreen
-
+import Mural from "./tabs/newMural/mural";
+import ExpressScreen from "./tabs/newMural/ExpressScreen";
+import DrawingScreen from "./tabs/newMural/DrawingScreen";
 import PromptScreen from "./tabs/newMural/PromptScreen";
 import * as Font from "expo-font";
-import { Text, View, StyleSheet, ActivityIndicator } from "react-native";
+import {
+  SafeAreaView,
+  View,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import Theme from "../assets/theme";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import Header from "./components/Header"; // Import the custom Header component
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+const loadFonts = async () => {
+  await Font.loadAsync({
+    "Emilys Candy": require("../assets/fonts/EmilysCandy-Regular.ttf"),
+  });
+  await Font.loadAsync({
+    Manrope: require("../assets/fonts/Manrope.ttf"),
+  });
+};
+
+const headerStyle = {
+  backgroundColor: Theme.colors.backgroundPrimary,
+  shadowColor: Theme.colors.backgroundSecondary,
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.4,
+  shadowRadius: 3,
+  elevation: 5,
+  paddingTop: 0,
+};
+
+const headerTitleStyle = {
+  fontFamily: "Emilys Candy",
+  fontSize: 40,
+  color: Theme.colors.textSecondary,
+};
+
+const screenOptions = {
+  headerBackTitle: "Back",
+  headerTintColor: Theme.colors.textSecondary, // Change back button color
+  headerStyle,
+  headerTitleStyle,
+};
+
 function PlusStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Mural" component={Mural} />
-      <Stack.Screen name="ExpressScreen" component={ExpressScreen} />
-      <Stack.Screen name="PromptScreen" component={PromptScreen} /> 
-      <Stack.Screen name="DrawingScreen" component={DrawingScreen} />
+    <Stack.Navigator screenOptions={screenOptions}>
+      <Stack.Screen
+        name="Mural"
+        component={Mural}
+        options={{
+          headerTitle: "MUSE",
+          headerBackTitleVisible: false,
+        }}
+      />
+      <Stack.Screen
+        name="ExpressScreen"
+        component={ExpressScreen}
+        options={{
+          headerTitle: "MUSE",
+          headerBackTitleVisible: false,
+        }}
+      />
+      <Stack.Screen
+        name="PromptScreen"
+        component={PromptScreen}
+        options={{
+          headerTitle: "MUSE",
+        }}
+      />
+      <Stack.Screen
+        name="DrawingScreen"
+        component={DrawingScreen}
+        options={{
+          headerTitle: "MUSE",
+        }}
+      />
     </Stack.Navigator>
   );
 }
@@ -36,18 +97,18 @@ function MyTabs() {
     <Tab.Navigator
       screenOptions={{
         tabBarStyle: {
-          backgroundColor: Theme.colors.backgroundPrimary, // Customize bottom tab background color
+          backgroundColor: Theme.colors.backgroundPrimary,
         },
-        tabBarActiveTintColor: Theme.colors.tabBarActive, // Color of active tab icons
-        tabBarInactiveTintColor: Theme.colors.tabBarInactive, // Color of inactive tab icons
+        tabBarActiveTintColor: Theme.colors.tabBarActive,
+        tabBarInactiveTintColor: Theme.colors.tabBarInactive,
       }}
     >
       <Tab.Screen
         name="Home"
         component={Home}
         options={{
-          header: () => <Header />, // Use the reusable Header component
-          headerShown: true, // Ensure header is shown
+          headerTitle: "MUSE",
+          ...screenOptions,
           tabBarLabel: () => null,
           tabBarIcon: ({ size, focused }) => (
             <MaterialCommunityIcons
@@ -64,6 +125,7 @@ function MyTabs() {
         name="Plus"
         component={PlusStack}
         options={{
+          headerShown: false, // Hide the header for the tab, shown in PlusStack screens
           tabBarLabel: () => null,
           tabBarIcon: ({ size, focused }) => (
             <MaterialCommunityIcons
@@ -80,8 +142,8 @@ function MyTabs() {
         name="Gallery"
         component={Gallery}
         options={{
-          header: () => <Header />, // Use the reusable Header component
-          headerShown: true, // Ensure header is shown
+          headerTitle: "MUSE",
+          ...screenOptions,
           tabBarLabel: () => null,
           tabBarIcon: ({ size, focused }) => (
             <MaterialCommunityIcons
@@ -98,12 +160,6 @@ function MyTabs() {
   );
 }
 
-const loadFonts = async () => {
-  await Font.loadAsync({
-    "Emilys Candy": require("../assets/fonts/EmilysCandy-Regular.ttf"), // Replace with your font file path
-  });
-};
-
 function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
@@ -113,47 +169,47 @@ function App() {
 
   if (!fontsLoaded) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" />
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Splash">
-        <Stack.Screen
-          name="Splash"
-          component={SplashScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Main"
-          component={MyTabs}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaView style={styles.safeArea}>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName="Splash"
+          screenOptions={screenOptions}
+        >
+          <Stack.Screen
+            name="Splash"
+            component={SplashScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Main"
+            component={MyTabs}
+            options={{ headerShown: false }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: Theme.colors.backgroundPrimary,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  text: {
-    fontFamily: "Emilys Candy",
-    fontSize: 24,
-  },
 });
 
 export default App;
-
-
