@@ -23,6 +23,7 @@ const Gallery = () => {
   const screenWidth = Dimensions.get("window").width;
   const numColumns = screenWidth < 768 ? 1 : 2;
 
+  // Fetch murals from Supabase
   useEffect(() => {
     const fetchMurals = async () => {
       try {
@@ -74,18 +75,20 @@ const Gallery = () => {
         .from("canvases")
         .update({ paths: updatedPaths })
         .eq("id", selectedMural.id);
-
       if (error) throw error;
 
-      // Update the local state for the selected mural and murals list
-      setSelectedMural((prev) => ({ ...prev, paths: updatedPaths }));
+      // Update only the selected mural in the state
       setMurals((prevMurals) =>
-        prevMurals.map((mural) =>
-          mural.id === selectedMural.id
-            ? { ...mural, paths: updatedPaths }
-            : mural
+        prevMurals.map(
+          (mural) =>
+            mural.id === selectedMural.id
+              ? { ...mural, paths: updatedPaths } // Update the specific mural
+              : mural // Keep other murals unchanged
         )
       );
+
+      // Update the local selected mural
+      setSelectedMural((prev) => ({ ...prev, paths: updatedPaths }));
 
       // Clear the temporary drawing paths
       setDrawingPaths([]);
@@ -105,16 +108,20 @@ const Gallery = () => {
         .from("canvases")
         .update({ paths: [] })
         .eq("id", selectedMural.id);
-
       if (error) throw error;
 
-      // Update the local state for the selected mural and murals list
-      setSelectedMural((prev) => ({ ...prev, paths: [] }));
+      // Update only the selected mural in the state
       setMurals((prevMurals) =>
-        prevMurals.map((mural) =>
-          mural.id === selectedMural.id ? { ...mural, paths: [] } : mural
+        prevMurals.map(
+          (mural) =>
+            mural.id === selectedMural.id
+              ? { ...mural, paths: [] } // Clear the specific mural's paths
+              : mural // Keep other murals unchanged
         )
       );
+
+      // Update the local selected mural
+      setSelectedMural((prev) => ({ ...prev, paths: [] }));
 
       // Clear the temporary drawing paths
       setDrawingPaths([]);
@@ -139,7 +146,6 @@ const Gallery = () => {
         <Text style={styles.promptText}>{selectedMural.prompt}</Text>
         <View style={styles.canvas} {...panResponder.panHandlers}>
           <Svg style={styles.svgCanvas}>
-            {/* Render the existing paths */}
             {selectedMural.paths &&
               selectedMural.paths.map((pathObj, index) => (
                 <Path
@@ -150,7 +156,6 @@ const Gallery = () => {
                   fill="none"
                 />
               ))}
-            {/* Render the current drawing paths */}
             {drawingPaths.map((pathObj, index) => (
               <Path
                 key={`drawing-${index}`}
@@ -193,23 +198,32 @@ const Gallery = () => {
   };
 
   const renderMural = ({ item }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => {
-        setSelectedMural(item);
-        setIsCanvasVisible(true);
-      }}
-    >
-      <ImageBackground
-        source={require("../../../assets/images/liveMural.png")}
-        style={styles.imageBackground}
+    <View style={styles.card}>
+      <TouchableOpacity
+        onPress={() => {
+          setSelectedMural(item);
+          setIsCanvasVisible(true);
+        }}
       >
-        <View style={styles.textContainer}>
-          <Text style={styles.cardText}>{item.prompt}</Text>
-          <Text style={styles.cardDetail}>{item.detail}</Text>
-        </View>
-      </ImageBackground>
-    </TouchableOpacity>
+        <ImageBackground
+          source={require("../../../assets/images/liveMural.png")}
+          style={styles.imageBackground}
+        >
+          <View style={styles.textContainer}>
+            <Text style={styles.cardText}>{item.prompt}</Text>
+            <Text style={styles.cardDetail}>{item.detail}</Text>
+          </View>
+        </ImageBackground>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.shareIcon}
+        onPress={() =>
+          alert(`Share Link: https://example.com/mural/${item.id}`)
+        }
+      >
+        <Text style={styles.shareIconText}>Share</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -353,6 +367,19 @@ const styles = StyleSheet.create({
   buttonText: {
     color: Theme.colors.backgroundPrimary,
     fontWeight: "bold",
+  },
+  shareIcon: {
+    alignSelf: "center",
+    marginTop: 5,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: Theme.colors.backgroundSecondary,
+    borderRadius: 5,
+  },
+  shareIconText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 10,
   },
 });
 
