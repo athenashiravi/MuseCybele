@@ -1,18 +1,26 @@
 import React from "react";
-import { View, Text, StyleSheet, ImageBackground } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ImageBackground,
+  Dimensions,
+} from "react-native";
+import Theme from "../../assets/theme";
+
+const windowWidth = Dimensions.get("window").width;
+const windowHeight = Dimensions.get("window").height;
 
 const RecentMural = () => {
   return (
     <ImageBackground
-      source={require("../../assets/images/mural-popout.png")} // Replace with your actual image path
+      source={require("../../assets/images/recentmural.png")} // Replace with your actual image path
       style={styles.background}
+      resizeMode="cover"
     >
       <View style={styles.recentlyOnMind}>
-        <Text style={styles.subtitle}>Recently on your mind</Text>
-        <View style={styles.card}>
-          <Text style={styles.cardText}>What are your current goals?</Text>
-          <Text style={styles.communityText}>Persian Community Mural</Text>
-        </View>
+        <Text style={styles.cardText}>What are your current goals?</Text>
+        <Text style={styles.communityText}>Persian Community Mural</Text>
       </View>
     </ImageBackground>
   );
@@ -20,13 +28,13 @@ const RecentMural = () => {
 
 const styles = StyleSheet.create({
   background: {
-    width: "100%",
-    height: undefined,
+    width: windowWidth * 0.92,
+    height: windowHeight * 0.3,
     justifyContent: "center",
     padding: 20,
+    borderRadius: 100,
   },
   recentlyOnMind: {
-    backgroundColor: "rgba(255, 255, 255, 0.7)", // Semi-transparent background
     borderRadius: 10,
     padding: 15,
   },
@@ -34,17 +42,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
-  card: {
-    borderRadius: 10,
-    padding: 15,
-    marginTop: 10,
-  },
   cardText: {
-    fontSize: 16,
+    textAlign: "center",
+    fontSize: 30,
+    fontFamily: "Manrope",
+    fontWeight: "bold",
+    paddingBottom: 10,
   },
   communityText: {
-    fontSize: 14,
-    color: "#999",
+    fontSize: 20,
+    color: Theme.colors.textGray,
+    textAlign: "center",
   },
 });
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { FlatList, View, Text, StyleSheet } from "react-native";
+import { FlatList, View, StyleSheet } from "react-native";
 import Identity from "./Identity";
 
 const DATA = [
@@ -15,21 +15,29 @@ const IdentityFeed = () => {
   const renderItem = ({ item }) => <Identity title={item.title} />;
 
   return (
-    <View>
+    <View style={styles.container}>
       <FlatList
         data={DATA}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={styles.row}
+        contentContainerStyle={styles.listContentContainer}
       />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   row: {
     justifyContent: "space-between",
+    marginBottom: 10, // Add spacing between rows
+  },
+  listContentContainer: {
+    paddingBottom: 20, // Add padding to the bottom of the list to prevent cut-off
   },
 });
 

@@ -7,21 +7,11 @@ import {
   ImageBackground,
 } from "react-native";
 
-// Replace 'require' with your actual image paths
-const IDENTITIES = {
-  "Persian Moms": require("./assets/persian_moms.png"),
-  "Newborn Moms": require("./assets/newborn_moms.png"),
-  "Single Moms": require("./assets/single_moms.png"),
-  "Military Moms": require("./assets/military_moms.png"),
-  "Rural Moms": require("./assets/rural_moms.png"),
-  "Working Moms": require("./assets/working_moms.png"),
-};
-
 const Identity = ({ title }) => {
   return (
     <TouchableOpacity style={styles.box}>
       <ImageBackground
-        source={IDENTITIES[title]} // Using the images from assets
+        source={require("../../assets/images/identity-popout.png")}
         style={styles.imageBackground}
         imageStyle={styles.imageStyle}
       >
@@ -35,14 +25,16 @@ const styles = StyleSheet.create({
   box: {
     flex: 1,
     margin: 10,
-    borderRadius: 10,
+    borderRadius: 45,
+    height: "100%", // Update to desired height
     overflow: "hidden",
-    height: 100, // Set a fixed height for the boxes
+    padding: 10,
   },
   imageBackground: {
     justifyContent: "center",
     alignItems: "center",
     height: "100%",
+    width: "100%",
   },
   imageStyle: {
     borderRadius: 10,
