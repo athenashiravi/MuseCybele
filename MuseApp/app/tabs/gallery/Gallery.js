@@ -125,6 +125,36 @@ const Gallery = () => {
       </TouchableOpacity>
     </View>
   );
+  // Render the canvas for a selected mural
+  const renderCanvas = () => {
+    if (!selectedMural) return null;
+
+    return (
+      <View style={styles.canvasContainer}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => setIsCanvasVisible(false)}
+        >
+          <Text style={styles.backButtonText}>Back to Gallery</Text>
+        </TouchableOpacity>
+        <Text style={styles.promptText}>{selectedMural.prompt}</Text>
+        <View style={styles.canvas}>
+          <Svg style={styles.svgCanvas}>
+            {selectedMural.paths &&
+              selectedMural.paths.map((pathObj, index) => (
+                <Path
+                  key={index}
+                  d={pathObj.path}
+                  stroke={pathObj.color}
+                  strokeWidth={3}
+                  fill="none"
+                />
+              ))}
+          </Svg>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -132,9 +162,6 @@ const Gallery = () => {
         renderCanvas()
       ) : (
         <>
-          <View style={styles.header}>
-            <Text style={styles.title}>Live Murals</Text>
-          </View>
           <FlatList
             key={numColumns.toString()}
             data={murals}
@@ -195,6 +222,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 3,
     elevation: 5,
+    marginRight: 10,
+    marginLeft: 10,
   },
   cardText: {
     fontSize: 30,

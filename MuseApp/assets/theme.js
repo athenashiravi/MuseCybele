@@ -18,6 +18,7 @@ export default {
     shadowColor: "#f8f2fc",
 
     buttonBackground: "#D582D7",
+    buttonSecondary: "#E7B8E8",
   },
   sizes: {
     iconSmall: 16,

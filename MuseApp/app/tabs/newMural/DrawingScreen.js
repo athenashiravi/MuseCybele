@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../../supabaseClient";
+import Theme from "../../../assets/theme";
 
 const DrawingScreen = ({ route, navigation }) => {
   const { identity, inputs } = route.params || {};
@@ -61,7 +62,10 @@ const DrawingScreen = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Your Prompt: {inputs?.selectedOption}</Text>
+      <View style={styles.heading}>
+        <Text style={styles.title}>Your Prompt, Your Muse . . . </Text>
+        <Text style={styles.title2}> {inputs?.selectedOption}</Text>
+      </View>
       <View
         style={styles.canvas}
         onStartShouldSetResponder={() => true}
@@ -100,17 +104,30 @@ const DrawingScreen = ({ route, navigation }) => {
           onPress={() => setStrokeColor("red")}
         />
         <TouchableOpacity
+          style={[styles.colorOption, { backgroundColor: "purple" }]}
+          onPress={() => setStrokeColor("purple")}
+        />
+        <TouchableOpacity
           style={[styles.colorOption, { backgroundColor: "blue" }]}
           onPress={() => setStrokeColor("blue")}
         />
+
         <TouchableOpacity
           style={[styles.colorOption, { backgroundColor: "green" }]}
           onPress={() => setStrokeColor("green")}
         />
+        <TouchableOpacity
+          style={[styles.colorOption, { backgroundColor: "yellow" }]}
+          onPress={() => setStrokeColor("yellow")}
+        />
       </View>
       <View style={styles.buttons}>
-        <Button title="Clear" onPress={clearCanvas} />
-        <Button title="Save" onPress={saveCanvas} />
+        <TouchableOpacity style={styles.button1} onPress={clearCanvas}>
+          <Text style={styles.buttonText}>Clear</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button2} onPress={saveCanvas}>
+          <Text style={styles.buttonText}>Done!</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -119,23 +136,40 @@ const DrawingScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    padding: 20,
+    backgroundColor: Theme.colors.backgroundPrimary,
+    padding: 35,
+  },
+  heading: {
+    alignItems: "left",
+    paddingBottom: 25,
   },
   title: {
-    fontSize: 18,
+    fontSize: 45,
     fontWeight: "bold",
     marginVertical: 10,
-    color: "#7B4B94",
+    color: Theme.colors.textSecondary,
+    fontFamily: "Emilys Candy",
+  },
+  title2: {
+    fontSize: 45,
+    fontWeight: "bold",
+    marginVertical: 8,
+    color: Theme.colors.textPrimary,
+    fontFamily: "Emilys Candy",
   },
   canvas: {
-    width: Dimensions.get("window").width - 20,
-    height: 400,
+    alignItems: "center",
+    width: Dimensions.get("window").width - 70,
+    height: 600,
     backgroundColor: "#fff",
-    borderColor: "#000",
+    borderColor: Theme.colors.backgroundSecondary,
     borderWidth: 1,
-    marginVertical: 20,
+    marginBottom: 20,
+    shadowColor: Theme.colors.backgroundSecondary,
+    shadowOffset: { width: 0, height: 4 }, // Position of shadow
+    shadowOpacity: 0.25, // Shadow transparency
+    shadowRadius: 4, // Spread of shadow
+    elevation: 5, // Shadow effect on Android
   },
   svgCanvas: {
     flex: 1,
@@ -146,22 +180,58 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   colorOption: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 50,
+    height: 50,
+    borderRadius: 50,
     borderWidth: 1,
-    borderColor: "#000",
+    borderColor: Theme.colors.backgroundPrimary,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 }, // Position of shadow
+    shadowOpacity: 0.25, // Shadow transparency
+    shadowRadius: 4, // Spread of shadow
+    elevation: 5, // Shadow effect on Android
   },
   buttons: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    width: "80%",
+    justifyContent: "space-between",
+    width: "100%",
+    padding: 10,
+  },
+
+  button1: {
+    backgroundColor: Theme.colors.buttonSecondary,
+    padding: 20,
+    borderRadius: 45,
     marginTop: 20,
+    height: 75,
+    alignItems: "center",
+    width: "26%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 }, // Position of shadow
+    shadowOpacity: 0.25, // Shadow transparency
+    shadowRadius: 4, // Spread of shadow
+    elevation: 5, // Shadow effect on Android
+  },
+  button2: {
+    backgroundColor: Theme.colors.backgroundSecondary,
+    padding: 20,
+    borderRadius: 45,
+    marginTop: 20,
+    height: 75,
+    alignItems: "center",
+    width: "26%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 }, // Position of shadow
+    shadowOpacity: 0.25, // Shadow transparency
+    shadowRadius: 4, // Spread of shadow
+    elevation: 5, // Shadow effect on Android
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 25,
+    fontWeight: "bold",
+    fontFamily: "Manrope",
   },
 });
 
 export default DrawingScreen;
-
-
-
-
