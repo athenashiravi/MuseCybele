@@ -19,7 +19,7 @@ const windowHeight = Dimensions.get("window").height;
 const Home = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.header}>
           <Image
             source={require("../../../assets/images/corner-watercolor.png")} // Using the images from assets
@@ -38,7 +38,7 @@ const Home = () => {
             <IdentityFeed />
           </View>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
