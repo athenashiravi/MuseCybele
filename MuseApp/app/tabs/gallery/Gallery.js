@@ -7,13 +7,11 @@ import {
   FlatList,
   Dimensions,
   ImageBackground,
-  Modal,
-  TextInput,
+  PanResponder,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../../supabaseClient";
 import Theme from "../../../assets/theme";
-import { MaterialIcons } from "@expo/vector-icons";
 
 const Gallery = () => {
   const [murals, setMurals] = useState([]);
@@ -21,12 +19,11 @@ const Gallery = () => {
   const [selectedMural, setSelectedMural] = useState(null);
   const [drawingPaths, setDrawingPaths] = useState([]);
   const [strokeColor, setStrokeColor] = useState("black");
-  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
-  const [shareLink, setShareLink] = useState("");
 
   const screenWidth = Dimensions.get("window").width;
   const numColumns = screenWidth < 768 ? 1 : 2;
 
+  // Fetch murals from Supabase
   useEffect(() => {
     const fetchMurals = async () => {
       try {
@@ -43,61 +40,162 @@ const Gallery = () => {
     fetchMurals();
   }, []);
 
-  const openShareModal = (link) => {
-    setShareLink(link);
-    setIsShareModalVisible(true);
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderGrant: (e) => {
+        const { locationX, locationY } = e.nativeEvent;
+        setDrawingPaths((prevPaths) => [
+          ...prevPaths,
+          { path: `M ${locationX} ${locationY}`, color: strokeColor },
+        ]);
+      },
+      onPanResponderMove: (e) => {
+        const { locationX, locationY } = e.nativeEvent;
+        setDrawingPaths((prevPaths) => {
+          const updatedPaths = [...prevPaths];
+          updatedPaths[
+            updatedPaths.length - 1
+          ].path += ` L ${locationX} ${locationY}`;
+          return updatedPaths;
+        });
+      },
+    })
+  ).current;
+
+  const saveCanvas = async () => {
+    if (!selectedMural) return;
+
+    try {
+      // Combine existing paths with the new drawing paths
+      const updatedPaths = [...(selectedMural.paths || []), ...drawingPaths];
+
+      // Update the selected mural in the database
+      const { error } = await supabase
+        .from("canvases")
+        .update({ paths: updatedPaths })
+        .eq("id", selectedMural.id);
+      if (error) throw error;
+
+      // Update only the selected mural in the state
+      setMurals((prevMurals) =>
+        prevMurals.map(
+          (mural) =>
+            mural.id === selectedMural.id
+              ? { ...mural, paths: updatedPaths } // Update the specific mural
+              : mural // Keep other murals unchanged
+        )
+      );
+
+      // Update the local selected mural
+      setSelectedMural((prev) => ({ ...prev, paths: updatedPaths }));
+
+      // Clear the temporary drawing paths
+      setDrawingPaths([]);
+      alert("Canvas saved successfully!");
+    } catch (error) {
+      console.error("Error saving canvas:", error.message);
+      alert("Failed to save canvas. Please try again.");
+    }
   };
 
-  const closeShareModal = () => {
-    setIsShareModalVisible(false);
-    setShareLink("");
+  const clearCanvas = async () => {
+    if (!selectedMural) return;
+
+    try {
+      // Clear paths in the database
+      const { error } = await supabase
+        .from("canvases")
+        .update({ paths: [] })
+        .eq("id", selectedMural.id);
+      if (error) throw error;
+
+      // Update only the selected mural in the state
+      setMurals((prevMurals) =>
+        prevMurals.map(
+          (mural) =>
+            mural.id === selectedMural.id
+              ? { ...mural, paths: [] } // Clear the specific mural's paths
+              : mural // Keep other murals unchanged
+        )
+      );
+
+      // Update the local selected mural
+      setSelectedMural((prev) => ({ ...prev, paths: [] }));
+
+      // Clear the temporary drawing paths
+      setDrawingPaths([]);
+      alert("Canvas cleared successfully!");
+    } catch (error) {
+      console.error("Error clearing canvas:", error.message);
+      alert("Failed to clear canvas. Please try again.");
+    }
   };
 
-  const renderShareModal = () => (
-    <Modal
-      visible={isShareModalVisible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={closeShareModal}
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Share Modal</Text>
-          <Text style={styles.modalSubtitle}>Share this link via</Text>
-          <View style={styles.shareIcons}>
-            <MaterialIcons name="facebook" size={30} color="#4267B2" />
-            <MaterialIcons name="twitter" size={30} color="#1DA1F2" />
-            <MaterialIcons name="instagram" size={30} color="#C13584" />
-            <MaterialIcons name="whatsapp" size={30} color="#25D366" />
-            <MaterialIcons name="telegram" size={30} color="#0088cc" />
-          </View>
-          <Text style={styles.modalSubtitle}>Or copy link</Text>
-          <View style={styles.copyLinkContainer}>
-            <TextInput
-              style={styles.shareLink}
-              value={shareLink}
-              editable={false}
-            />
-            <TouchableOpacity
-              style={styles.copyButton}
-              onPress={() => {
-                navigator.clipboard.writeText(shareLink);
-                alert("Link copied!");
-              }}
-            >
-              <Text style={styles.copyButtonText}>Copy</Text>
-            </TouchableOpacity>
-          </View>
+  const renderCanvas = () => {
+    if (!selectedMural) return null;
+
+    return (
+      <View style={styles.canvasContainer}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => setIsCanvasVisible(false)}
+        >
+          <Text style={styles.backButtonText}>Back to Gallery</Text>
+        </TouchableOpacity>
+        <Text style={styles.promptText}>{selectedMural.prompt}</Text>
+        <View style={styles.canvas} {...panResponder.panHandlers}>
+          <Svg style={styles.svgCanvas}>
+            {selectedMural.paths &&
+              selectedMural.paths.map((pathObj, index) => (
+                <Path
+                  key={`saved-${index}`}
+                  d={pathObj.path}
+                  stroke={pathObj.color}
+                  strokeWidth={3}
+                  fill="none"
+                />
+              ))}
+            {drawingPaths.map((pathObj, index) => (
+              <Path
+                key={`drawing-${index}`}
+                d={pathObj.path}
+                stroke={pathObj.color}
+                strokeWidth={3}
+                fill="none"
+              />
+            ))}
+          </Svg>
+        </View>
+        <View style={styles.colorPalette}>
           <TouchableOpacity
-            style={styles.closeButton}
-            onPress={closeShareModal}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
+            style={[styles.colorOption, { backgroundColor: "black" }]}
+            onPress={() => setStrokeColor("black")}
+          />
+          <TouchableOpacity
+            style={[styles.colorOption, { backgroundColor: "red" }]}
+            onPress={() => setStrokeColor("red")}
+          />
+          <TouchableOpacity
+            style={[styles.colorOption, { backgroundColor: "blue" }]}
+            onPress={() => setStrokeColor("blue")}
+          />
+          <TouchableOpacity
+            style={[styles.colorOption, { backgroundColor: "green" }]}
+            onPress={() => setStrokeColor("green")}
+          />
+        </View>
+        <View style={styles.buttons}>
+          <TouchableOpacity style={styles.button} onPress={clearCanvas}>
+            <Text style={styles.buttonText}>Clear</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={saveCanvas}>
+            <Text style={styles.buttonText}>Save</Text>
           </TouchableOpacity>
         </View>
       </View>
-    </Modal>
-  );
+    );
+  };
 
   const renderMural = ({ item }) => (
     <View style={styles.card}>
@@ -119,9 +217,11 @@ const Gallery = () => {
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.shareIcon}
-        onPress={() => openShareModal(`https://yourapp.com/mural/${item.id}`)}
+        onPress={() =>
+          alert(`Share Link: https://example.com/mural/${item.id}`)
+        }
       >
-        <MaterialIcons name="share" size={24} color={Theme.colors.textGray} />
+        <Text style={styles.shareIconText}>Share</Text>
       </TouchableOpacity>
     </View>
   );
@@ -172,7 +272,6 @@ const Gallery = () => {
           />
         </>
       )}
-      {renderShareModal()}
     </View>
   );
 };
@@ -236,71 +335,80 @@ const styles = StyleSheet.create({
     color: Theme.colors.textGray,
     textAlign: "center",
   },
-  shareIcon: {
-    position: "absolute",
-    bottom: 10,
-    left: 10,
-    padding: 5,
-  },
-  modalContainer: {
+  canvasContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    width: "90%",
     backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 20,
-    alignItems: "center",
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    marginBottom: 10,
-  },
-  shareIcons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "80%",
-    marginBottom: 20,
-  },
-  copyLinkContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  shareLink: {
-    flex: 1,
-    borderColor: "#ccc",
+  canvas: {
+    width: "90%",
+    height: 300,
+    backgroundColor: "#fff",
+    borderColor: "#000",
     borderWidth: 1,
-    borderRadius: 5,
-    padding: 5,
-    marginRight: 10,
+    marginVertical: 20,
   },
-  copyButton: {
+  svgCanvas: {
+    flex: 1,
+  },
+  backButton: {
+    position: "absolute",
+    top: 20,
+    left: 10,
     backgroundColor: Theme.colors.backgroundSecondary,
     padding: 10,
     borderRadius: 5,
   },
-  copyButtonText: {
+  backButtonText: {
     color: Theme.colors.backgroundPrimary,
     fontWeight: "bold",
   },
-  closeButton: {
-    marginTop: 10,
-    backgroundColor: Theme.colors.textGray,
+  promptText: {
+    fontSize: 18,
+    marginVertical: 10,
+    fontWeight: "bold",
+  },
+  colorPalette: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginVertical: 10,
+  },
+  colorOption: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: "#000",
+  },
+  buttons: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginTop: 20,
+    width: "80%",
+  },
+  button: {
+    backgroundColor: Theme.colors.backgroundSecondary,
     padding: 10,
     borderRadius: 5,
   },
-  closeButtonText: {
+  buttonText: {
+    color: Theme.colors.backgroundPrimary,
+    fontWeight: "bold",
+  },
+  shareIcon: {
+    alignSelf: "center",
+    marginTop: 5,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: Theme.colors.backgroundSecondary,
+    borderRadius: 5,
+  },
+  shareIconText: {
     color: "#fff",
     fontWeight: "bold",
+    fontSize: 10,
   },
 });
 
