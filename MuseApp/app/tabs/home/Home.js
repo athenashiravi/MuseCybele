@@ -18,28 +18,26 @@ const windowHeight = Dimensions.get("window").height;
 
 const Home = () => {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Image
-            source={require("../../../assets/images/corner-watercolor.png")} // Using the images from assets
-            style={styles.image} // Apply image style
-            resizeMode="cover" // Adjust how the image fills the container
-          />
-          <Text style={styles.heading}> Welcome Esha</Text>
-        </View>
-        <View>
-          <Text style={styles.subtitle}>Recently On Your Mind . . .</Text>
-          <RecentMural />
-        </View>
-        <View style={styles.identity}>
-          <Text style={styles.subtitle}>Your Identities</Text>
-          <View style={styles.listContainer}>
-            <IdentityFeed />
-          </View>
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Image
+          source={require("../../../assets/images/corner-watercolor.png")} // Using the images from assets
+          style={styles.image} // Apply image style
+          resizeMode="cover" // Adjust how the image fills the container
+        />
+        <Text style={styles.heading}> Welcome Esha</Text>
+      </View>
+      <View>
+        <Text style={styles.subtitle}>Recently On Your Mind . . .</Text>
+        <RecentMural />
+      </View>
+      <View style={styles.identity}>
+        <Text style={styles.subtitle2}> Your Identities</Text>
+        <View style={styles.listContainer}>
+          <IdentityFeed />
         </View>
       </View>
-    </SafeAreaView>
+    </ScrollView>
   );
 };
 //
@@ -91,6 +89,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Emilys Candy",
     paddingBottom: 10,
+  },
+  subtitle2: {
+    fontSize: 30,
+    fontWeight: "bold",
+    fontFamily: "Emilys Candy",
+    paddingTop: 50,
   },
   cardText: {
     fontSize: 30,

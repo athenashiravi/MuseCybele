@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     borderRadius: 45,
     height: "100%", // Update to desired height
     overflow: "hidden",
-    padding: 10,
+    paddingBottom: 10,
   },
   imageBackground: {
     justifyContent: "center",
@@ -40,9 +40,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   boxText: {
-    fontSize: 16,
+    fontSize: 25,
     fontWeight: "bold",
     color: "black", // Change color as needed
+    fontFamily: "Manrope",
   },
 });
 
