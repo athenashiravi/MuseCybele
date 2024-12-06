@@ -8,6 +8,7 @@ import {
   Dimensions,
   ImageBackground,
   PanResponder,
+  Alert,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../../supabaseClient";
@@ -24,8 +25,9 @@ const Gallery = () => {
   const [selectedMural, setSelectedMural] = useState(null);
   const [drawingPaths, setDrawingPaths] = useState([]);
   const [strokeColor, setStrokeColor] = useState("black");
+  const currentColor = useRef("black");
 
-  const viewShotRef = useRef(null); // Ref for ViewShot
+  const viewShotRef = useRef(null);
   const screenWidth = Dimensions.get("window").width;
   const numColumns = screenWidth < 768 ? 1 : 2;
 
@@ -46,9 +48,7 @@ const Gallery = () => {
     fetchMurals();
   }, []);
 
-  // when you click save, check if a mural already exists with the mural id. if it exists,
-
-  const captureAndShare = async (mural) => {
+  const captureAndShare = async () => {
     try {
       if (!viewShotRef.current) throw new Error("ViewShot reference is null.");
 
@@ -67,7 +67,7 @@ const Gallery = () => {
         const { data, error: uploadError } = await supabase.storage
           .from("mural-screenshots")
           .upload(`mural-${muralid}.png`, {
-            uri: uri, // Use the original file URI
+            uri: uri,
             type: "image/png",
             name: `mural-${muralid}.png`,
           });
@@ -83,20 +83,6 @@ const Gallery = () => {
         .getPublicUrl(`mural-${muralid}.png`);
       console.log("Public URL:", data.publicUrl);
 
-      // Update Supabase table
-      // const { error: updateError } = await supabase
-      //   .from("canvases")
-      //   .update({ screenshot_url: data.publicUrl })
-      //   .eq("id", muralid);
-      // if (updateError) throw updateError;
-      // console.log("Supabase table updated successfully");
-
-      // Share the URL
-      // await Sharing.shareAsync({
-      //   //message: `Check out this mural: ${publicUrl}`,
-      //   url: publicUrl,
-      // });
-      //console.log(publicUrl);
       await Sharing.shareAsync(data.publicUrl);
 
       Alert.alert("Success", "Screenshot shared successfully!");
@@ -106,14 +92,19 @@ const Gallery = () => {
     }
   };
 
-  const panResponder = React.useRef(
+  // Update the color reference whenever strokeColor changes
+  useEffect(() => {
+    currentColor.current = strokeColor;
+  }, [strokeColor]);
+
+  const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderGrant: (e) => {
         const { locationX, locationY } = e.nativeEvent;
         setDrawingPaths((prevPaths) => [
           ...prevPaths,
-          { path: `M ${locationX} ${locationY}`, color: strokeColor },
+          { path: `M ${locationX} ${locationY}`, color: currentColor.current },
         ]);
       },
       onPanResponderMove: (e) => {
@@ -145,11 +136,10 @@ const Gallery = () => {
 
       // Update only the selected mural in the state
       setMurals((prevMurals) =>
-        prevMurals.map(
-          (mural) =>
-            mural.id === selectedMural.id
-              ? { ...mural, paths: updatedPaths } // Update the specific mural
-              : mural // Keep other murals unchanged
+        prevMurals.map((mural) =>
+          mural.id === selectedMural.id
+            ? { ...mural, paths: updatedPaths }
+            : mural
         )
       );
 
@@ -178,11 +168,8 @@ const Gallery = () => {
 
       // Update only the selected mural in the state
       setMurals((prevMurals) =>
-        prevMurals.map(
-          (mural) =>
-            mural.id === selectedMural.id
-              ? { ...mural, paths: [] } // Clear the specific mural's paths
-              : mural // Keep other murals unchanged
+        prevMurals.map((mural) =>
+          mural.id === selectedMural.id ? { ...mural, paths: [] } : mural
         )
       );
 
@@ -197,6 +184,28 @@ const Gallery = () => {
       alert("Failed to clear canvas. Please try again.");
     }
   };
+
+  const renderColorPalette = () => (
+    <View style={styles.colorPalette}>
+      {["black", "red", "purple", "blue", "green", "yellow"].map((color) => (
+        <TouchableOpacity
+          key={color}
+          style={[
+            styles.colorOption,
+            {
+              backgroundColor: color,
+              borderWidth: strokeColor === color ? 3 : 1,
+              borderColor:
+                strokeColor === color
+                  ? "white"
+                  : Theme.colors.backgroundPrimary,
+            },
+          ]}
+          onPress={() => setStrokeColor(color)}
+        />
+      ))}
+    </View>
+  );
 
   const renderCanvas = () => {
     if (!selectedMural) return null;
@@ -227,9 +236,9 @@ const Gallery = () => {
           <Text style={styles.title2}>{" " + selectedMural.prompt}</Text>
         </View>
         <ViewShot
-          ref={viewShotRef} // Reference for capturing screenshots
+          ref={viewShotRef}
           options={{ format: "png", quality: 1 }}
-          style={styles.viewShot} // Add this style
+          style={styles.viewShot}
         >
           <View style={styles.canvas} {...panResponder.panHandlers}>
             <Svg style={styles.svgCanvas}>
@@ -255,33 +264,7 @@ const Gallery = () => {
             </Svg>
           </View>
         </ViewShot>
-        <View style={styles.colorPalette}>
-          <TouchableOpacity
-            style={[styles.colorOption, { backgroundColor: "black" }]}
-            onPress={() => setStrokeColor("black")}
-          />
-          <TouchableOpacity
-            style={[styles.colorOption, { backgroundColor: "red" }]}
-            onPress={() => setStrokeColor("red")}
-          />
-          <TouchableOpacity
-            style={[styles.colorOption, { backgroundColor: "purple" }]}
-            onPress={() => setStrokeColor("purple")}
-          />
-          <TouchableOpacity
-            style={[styles.colorOption, { backgroundColor: "blue" }]}
-            onPress={() => setStrokeColor("blue")}
-          />
-
-          <TouchableOpacity
-            style={[styles.colorOption, { backgroundColor: "green" }]}
-            onPress={() => setStrokeColor("green")}
-          />
-          <TouchableOpacity
-            style={[styles.colorOption, { backgroundColor: "yellow" }]}
-            onPress={() => setStrokeColor("yellow")}
-          />
-        </View>
+        {renderColorPalette()}
         <View style={styles.buttons}>
           <TouchableOpacity style={styles.button} onPress={clearCanvas}>
             <Text style={styles.buttonText}>Clear</Text>
@@ -321,16 +304,14 @@ const Gallery = () => {
       {isCanvasVisible ? (
         renderCanvas()
       ) : (
-        <>
-          <FlatList
-            key={numColumns.toString()}
-            data={murals}
-            renderItem={renderMural}
-            keyExtractor={(item) => item.id.toString()}
-            numColumns={numColumns}
-            contentContainerStyle={styles.grid}
-          />
-        </>
+        <FlatList
+          key={numColumns.toString()}
+          data={murals}
+          renderItem={renderMural}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={numColumns}
+          contentContainerStyle={styles.grid}
+        />
       )}
     </View>
   );
