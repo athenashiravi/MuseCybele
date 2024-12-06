@@ -83,6 +83,7 @@ const ExpressScreen = ({ route, navigation }) => {
             navigation.navigate("PromptScreen", {
               identity,
               inputs: { input1, input2, selectedOption },
+              prompt: selectedOption,
             })
           }
         >

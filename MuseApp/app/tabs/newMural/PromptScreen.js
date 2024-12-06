@@ -2,13 +2,13 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import Theme from "../../../assets/theme";
 const PromptScreen = ({ route, navigation }) => {
-  const { identity, inputs } = route.params || {}; // Get the passed parameters, if available
+  const { identity, inputs, prompt } = route.params || {}; // Get the passed parameters, if available
 
   return (
     <View style={styles.container}>
       <View style={styles.heading}>
         <Text style={styles.title}>Today's Prompt:</Text>
-        <Text style={styles.prompt}>What was the hardest part of my day?</Text>
+        <Text style={styles.prompt}>{prompt}</Text>
       </View>
       <Text style={styles.subtitle}>Happy with your prompt?</Text>
 
