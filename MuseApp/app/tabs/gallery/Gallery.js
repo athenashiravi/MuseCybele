@@ -13,9 +13,10 @@ import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../../supabaseClient";
 import Theme from "../../../assets/theme";
 import ViewShot from "react-native-view-shot";
-import * as FileSystem from 'expo-file-system';
-import uuid from 'react-native-uuid';
-import * as Sharing from 'expo-sharing';
+import * as FileSystem from "expo-file-system";
+import uuid from "react-native-uuid";
+import * as Sharing from "expo-sharing";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 const Gallery = () => {
   const [murals, setMurals] = useState([]);
@@ -50,38 +51,38 @@ const Gallery = () => {
   const captureAndShare = async (mural) => {
     try {
       if (!viewShotRef.current) throw new Error("ViewShot reference is null.");
-  
+
       // Capture the screenshot
       const uri = await viewShotRef.current.capture();
       console.log("Captured URI:", uri);
-  
+
       // Check if the file exists
       const fileInfo = await FileSystem.getInfoAsync(uri);
       if (!fileInfo.exists) throw new Error("Captured file does not exist.");
       console.log("File Info:", fileInfo);
-  
+
       // Upload directly to Supabase
-      let muralid = uuid.v4()
+      let muralid = uuid.v4();
       try {
         const { data, error: uploadError } = await supabase.storage
-        .from("mural-screenshots")
-        .upload(`mural-${(muralid)}.png`, {
-          uri: uri, // Use the original file URI
-          type: "image/png",
-          name: `mural-${muralid}.png`,
-        });
-  
-      if (uploadError) throw uploadError;
-      console.log("Upload Success:", data);
+          .from("mural-screenshots")
+          .upload(`mural-${muralid}.png`, {
+            uri: uri, // Use the original file URI
+            type: "image/png",
+            name: `mural-${muralid}.png`,
+          });
+
+        if (uploadError) throw uploadError;
+        console.log("Upload Success:", data);
       } catch (error) {
-        console.error("error, upload", error)
-        
+        console.error("error, upload", error);
       }
       // Get public URL
       const { data } = supabase.storage
-        .from("mural-screenshots").getPublicUrl(`mural-${muralid}.png`);
+        .from("mural-screenshots")
+        .getPublicUrl(`mural-${muralid}.png`);
       console.log("Public URL:", data.publicUrl);
-  
+
       // Update Supabase table
       // const { error: updateError } = await supabase
       //   .from("canvases")
@@ -89,7 +90,7 @@ const Gallery = () => {
       //   .eq("id", muralid);
       // if (updateError) throw updateError;
       // console.log("Supabase table updated successfully");
-  
+
       // Share the URL
       // await Sharing.shareAsync({
       //   //message: `Check out this mural: ${publicUrl}`,
@@ -97,14 +98,13 @@ const Gallery = () => {
       // });
       //console.log(publicUrl);
       await Sharing.shareAsync(data.publicUrl);
-  
+
       Alert.alert("Success", "Screenshot shared successfully!");
     } catch (error) {
       console.error("Error capturing or sharing screenshot:", error.message);
       Alert.alert("Error", error.message);
     }
-  };  
-  
+  };
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -203,13 +203,29 @@ const Gallery = () => {
 
     return (
       <View style={styles.canvasContainer}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => setIsCanvasVisible(false)}
-        >
-          <Text style={styles.backButtonText}>Back to Gallery</Text>
-        </TouchableOpacity>
-        <Text style={styles.promptText}>{selectedMural.prompt}</Text>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => setIsCanvasVisible(false)}
+          >
+            <Text style={styles.backButtonText}> {"< Back"}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.shareButton}
+            onPress={captureAndShare}
+          >
+            <Text style={styles.shareButtonText}>Share </Text>
+            <MaterialCommunityIcons
+              name="share-variant-outline"
+              size={18}
+              color={Theme.colors.backgroundPrimary}
+            />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.heading}>
+          <Text style={styles.title1}> Your Prompt, Your Muse . . . </Text>
+          <Text style={styles.title2}>{" " + selectedMural.prompt}</Text>
+        </View>
         <ViewShot
           ref={viewShotRef} // Reference for capturing screenshots
           options={{ format: "png", quality: 1 }}
@@ -249,22 +265,29 @@ const Gallery = () => {
             onPress={() => setStrokeColor("red")}
           />
           <TouchableOpacity
+            style={[styles.colorOption, { backgroundColor: "purple" }]}
+            onPress={() => setStrokeColor("purple")}
+          />
+          <TouchableOpacity
             style={[styles.colorOption, { backgroundColor: "blue" }]}
             onPress={() => setStrokeColor("blue")}
           />
+
           <TouchableOpacity
             style={[styles.colorOption, { backgroundColor: "green" }]}
             onPress={() => setStrokeColor("green")}
+          />
+          <TouchableOpacity
+            style={[styles.colorOption, { backgroundColor: "yellow" }]}
+            onPress={() => setStrokeColor("yellow")}
           />
         </View>
         <View style={styles.buttons}>
           <TouchableOpacity style={styles.button} onPress={clearCanvas}>
             <Text style={styles.buttonText}>Clear</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={captureAndShare}>
-            <Text style={styles.buttonText}>Share</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={saveCanvas}>
+
+          <TouchableOpacity style={styles.button2} onPress={saveCanvas}>
             <Text style={styles.buttonText}>Save</Text>
           </TouchableOpacity>
         </View>
@@ -290,12 +313,6 @@ const Gallery = () => {
           </View>
         </ImageBackground>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.shareIcon}
-        onPress={() => captureAndShare(item)}
-      >
-        <Text style={styles.shareIconText}>Share</Text>
-      </TouchableOpacity>
     </View>
   );
 
@@ -320,24 +337,46 @@ const Gallery = () => {
 };
 
 const styles = StyleSheet.create({
+  promptShare: {
+    flexDirection: "row", // Align children side by side
+    alignItems: "center", // Center items vertically
+    justifyContent: "space-between", // Adjust space between items
+    margin: 10, // Add margin if needed
+  },
   viewShot: {
     width: "100%", // Full width of the parent
     height: 300, // Set the desired height
     backgroundColor: "#fff", // Ensure a white background for the screenshot
+    alignItems: "center",
+  },
+  buttonContainer: {
+    flexDirection: "row", // Align children side by side
+    alignItems: "center", // Center items vertically
+    justifyContent: "space-between", // Adjust space between items
   },
   container: {
     flex: 1,
     backgroundColor: "#fff",
   },
-  header: {
-    paddingTop: 20,
-    paddingBottom: 10,
-    alignItems: "center",
+
+  heading: {
+    alignItems: "left",
+    paddingBottom: 25,
+    paddingTop: 0,
   },
-  title: {
-    fontSize: 24,
+  title1: {
+    fontSize: 45,
     fontWeight: "bold",
+    marginVertical: 10,
+    color: Theme.colors.textSecondary,
+    fontFamily: "Emilys Candy",
+  },
+  title2: {
+    fontSize: 45,
+    fontWeight: "bold",
+    marginVertical: 8,
     color: Theme.colors.textPrimary,
+    fontFamily: "Emilys Candy",
   },
   grid: {
     paddingHorizontal: 10,
@@ -385,32 +424,59 @@ const styles = StyleSheet.create({
   },
   canvasContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
     backgroundColor: "#fff",
+    padding: 35,
   },
   canvas: {
-    width: "90%",
-    height: 300,
+    alignItems: "center",
+    width: Dimensions.get("window").width - 70,
+    height: 600,
     backgroundColor: "#fff",
-    borderColor: "#000",
+    borderColor: Theme.colors.backgroundSecondary,
     borderWidth: 1,
-    marginVertical: 20,
+    marginBottom: 20,
+    shadowColor: Theme.colors.backgroundSecondary,
+    shadowOffset: { width: 0, height: 4 }, // Position of shadow
+    shadowOpacity: 0.25, // Shadow transparency
+    shadowRadius: 4, // Spread of shadow
+    elevation: 5, // Shadow effect on Android
   },
   svgCanvas: {
     flex: 1,
   },
   backButton: {
-    position: "absolute",
-    top: 20,
-    left: 10,
+    backgroundColor: Theme.colors.backgroundPrimary,
+    padding: 10,
+    borderRadius: 45,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 }, // Position of shadow
+    shadowOpacity: 0.25, // Shadow transparency
+    shadowRadius: 4, // Spread of shadow
+    elevation: 5, // Shadow effect on Android
+  },
+  shareButton: {
     backgroundColor: Theme.colors.backgroundSecondary,
     padding: 10,
-    borderRadius: 5,
+    borderRadius: 45,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 }, // Position of shadow
+    shadowOpacity: 0.25, // Shadow transparency
+    shadowRadius: 4, // Spread of shadow
+    elevation: 5, // Shadow effect on Android
+    flexDirection: "row", // Align children in a row
+    alignItems: "center",
   },
   backButtonText: {
+    color: Theme.colors.textSecondary,
+    fontWeight: "bold",
+    fontFamily: "Manrope",
+    fontSize: 18,
+  },
+  shareButtonText: {
     color: Theme.colors.backgroundPrimary,
     fontWeight: "bold",
+    fontFamily: "Manrope",
+    fontSize: 18,
   },
   promptText: {
     fontSize: 18,
@@ -419,31 +485,60 @@ const styles = StyleSheet.create({
   },
   colorPalette: {
     flexDirection: "row",
-    justifyContent: "center",
-    marginVertical: 10,
+    justifyContent: "space-around",
+    paddingTop: 320,
   },
   colorOption: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginHorizontal: 5,
+    width: 50,
+    height: 50,
+    borderRadius: 50,
     borderWidth: 1,
-    borderColor: "#000",
+    borderColor: Theme.colors.backgroundPrimary,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 }, // Position of shadow
+    shadowOpacity: 0.25, // Shadow transparency
+    shadowRadius: 4, // Spread of shadow
+    elevation: 5, // Shadow effect on Android
   },
   buttons: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 20,
-    width: "80%",
+    justifyContent: "space-between",
+    marginTop: 5,
+    width: "100%",
   },
   button: {
+    backgroundColor: Theme.colors.buttonSecondary,
+    padding: 20,
+    borderRadius: 45,
+    marginTop: 20,
+    height: 75,
+    alignItems: "center",
+    width: "26%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 }, // Position of shadow
+    shadowOpacity: 0.25, // Shadow transparency
+    shadowRadius: 4, // Spread of shadow
+    elevation: 5, // Shadow effect on Android
+  },
+  button2: {
     backgroundColor: Theme.colors.backgroundSecondary,
-    padding: 10,
-    borderRadius: 5,
+    padding: 20,
+    borderRadius: 45,
+    marginTop: 20,
+    height: 75,
+    alignItems: "center",
+    width: "26%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 }, // Position of shadow
+    shadowOpacity: 0.25, // Shadow transparency
+    shadowRadius: 4, // Spread of shadow
+    elevation: 5, // Shadow effect on Android
   },
   buttonText: {
-    color: Theme.colors.backgroundPrimary,
+    color: "#fff",
+    fontSize: 25,
     fontWeight: "bold",
+    fontFamily: "Manrope",
   },
   shareIcon: {
     alignSelf: "center",
@@ -461,7 +556,3 @@ const styles = StyleSheet.create({
 });
 
 export default Gallery;
-
-
-
-
