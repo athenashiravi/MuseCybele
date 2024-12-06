@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,10 @@ import {
 import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../../supabaseClient";
 import Theme from "../../../assets/theme";
+import ViewShot from "react-native-view-shot";
+import * as FileSystem from 'expo-file-system';
+import uuid from 'react-native-uuid';
+import * as Sharing from 'expo-sharing';
 
 const Gallery = () => {
   const [murals, setMurals] = useState([]);
@@ -20,6 +24,7 @@ const Gallery = () => {
   const [drawingPaths, setDrawingPaths] = useState([]);
   const [strokeColor, setStrokeColor] = useState("black");
 
+  const viewShotRef = useRef(null); // Ref for ViewShot
   const screenWidth = Dimensions.get("window").width;
   const numColumns = screenWidth < 768 ? 1 : 2;
 
@@ -39,6 +44,67 @@ const Gallery = () => {
     };
     fetchMurals();
   }, []);
+
+  // when you click save, check if a mural already exists with the mural id. if it exists,
+
+  const captureAndShare = async (mural) => {
+    try {
+      if (!viewShotRef.current) throw new Error("ViewShot reference is null.");
+  
+      // Capture the screenshot
+      const uri = await viewShotRef.current.capture();
+      console.log("Captured URI:", uri);
+  
+      // Check if the file exists
+      const fileInfo = await FileSystem.getInfoAsync(uri);
+      if (!fileInfo.exists) throw new Error("Captured file does not exist.");
+      console.log("File Info:", fileInfo);
+  
+      // Upload directly to Supabase
+      let muralid = uuid.v4()
+      try {
+        const { data, error: uploadError } = await supabase.storage
+        .from("mural-screenshots")
+        .upload(`mural-${(muralid)}.png`, {
+          uri: uri, // Use the original file URI
+          type: "image/png",
+          name: `mural-${muralid}.png`,
+        });
+  
+      if (uploadError) throw uploadError;
+      console.log("Upload Success:", data);
+      } catch (error) {
+        console.error("error, upload", error)
+        
+      }
+      // Get public URL
+      const { data } = supabase.storage
+        .from("mural-screenshots").getPublicUrl(`mural-${muralid}.png`);
+      console.log("Public URL:", data.publicUrl);
+  
+      // Update Supabase table
+      // const { error: updateError } = await supabase
+      //   .from("canvases")
+      //   .update({ screenshot_url: data.publicUrl })
+      //   .eq("id", muralid);
+      // if (updateError) throw updateError;
+      // console.log("Supabase table updated successfully");
+  
+      // Share the URL
+      // await Sharing.shareAsync({
+      //   //message: `Check out this mural: ${publicUrl}`,
+      //   url: publicUrl,
+      // });
+      //console.log(publicUrl);
+      await Sharing.shareAsync(data.publicUrl);
+  
+      Alert.alert("Success", "Screenshot shared successfully!");
+    } catch (error) {
+      console.error("Error capturing or sharing screenshot:", error.message);
+      Alert.alert("Error", error.message);
+    }
+  };  
+  
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -144,29 +210,35 @@ const Gallery = () => {
           <Text style={styles.backButtonText}>Back to Gallery</Text>
         </TouchableOpacity>
         <Text style={styles.promptText}>{selectedMural.prompt}</Text>
-        <View style={styles.canvas} {...panResponder.panHandlers}>
-          <Svg style={styles.svgCanvas}>
-            {selectedMural.paths &&
-              selectedMural.paths.map((pathObj, index) => (
+        <ViewShot
+          ref={viewShotRef} // Reference for capturing screenshots
+          options={{ format: "png", quality: 1 }}
+          style={styles.viewShot} // Add this style
+        >
+          <View style={styles.canvas} {...panResponder.panHandlers}>
+            <Svg style={styles.svgCanvas}>
+              {selectedMural.paths &&
+                selectedMural.paths.map((pathObj, index) => (
+                  <Path
+                    key={`saved-${index}`}
+                    d={pathObj.path}
+                    stroke={pathObj.color}
+                    strokeWidth={3}
+                    fill="none"
+                  />
+                ))}
+              {drawingPaths.map((pathObj, index) => (
                 <Path
-                  key={`saved-${index}`}
+                  key={`drawing-${index}`}
                   d={pathObj.path}
                   stroke={pathObj.color}
                   strokeWidth={3}
                   fill="none"
                 />
               ))}
-            {drawingPaths.map((pathObj, index) => (
-              <Path
-                key={`drawing-${index}`}
-                d={pathObj.path}
-                stroke={pathObj.color}
-                strokeWidth={3}
-                fill="none"
-              />
-            ))}
-          </Svg>
-        </View>
+            </Svg>
+          </View>
+        </ViewShot>
         <View style={styles.colorPalette}>
           <TouchableOpacity
             style={[styles.colorOption, { backgroundColor: "black" }]}
@@ -188,6 +260,9 @@ const Gallery = () => {
         <View style={styles.buttons}>
           <TouchableOpacity style={styles.button} onPress={clearCanvas}>
             <Text style={styles.buttonText}>Clear</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={captureAndShare}>
+            <Text style={styles.buttonText}>Share</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={saveCanvas}>
             <Text style={styles.buttonText}>Save</Text>
@@ -217,9 +292,7 @@ const Gallery = () => {
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.shareIcon}
-        onPress={() =>
-          alert(`Share Link: https://example.com/mural/${item.id}`)
-        }
+        onPress={() => captureAndShare(item)}
       >
         <Text style={styles.shareIconText}>Share</Text>
       </TouchableOpacity>
@@ -247,6 +320,11 @@ const Gallery = () => {
 };
 
 const styles = StyleSheet.create({
+  viewShot: {
+    width: "100%", // Full width of the parent
+    height: 300, // Set the desired height
+    backgroundColor: "#fff", // Ensure a white background for the screenshot
+  },
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -383,3 +461,7 @@ const styles = StyleSheet.create({
 });
 
 export default Gallery;
+
+
+
+
